@@ -5,12 +5,21 @@ import io.kotest.core.spec.style.FreeSpec
 import java.time.YearMonth
 
 class InvoiceDslTest : FreeSpec({
-    "invoice exists and has times" {
-        val invoice = invoices.firstOrNull {
-            it.yearMonth == YearMonth.of(2025, 1)
-        }
+    val invoice = invoices.firstOrNull {
+        it.yearMonth == YearMonth.of(2025, 1)
+    }
 
+    "invoice exists" {
         assert(invoice != null)
-        assert(invoice?.timesheet?.size == 21)
+    }
+
+    invoice!!
+
+    "invoice exists and has times" {
+        assert(invoice.timesheet.size == 21)
+    }
+
+    "invoice filename"{
+        assert(invoice.filename == "Niels Falk example Rechnung-Nr 0001-2025.pdf")
     }
 })

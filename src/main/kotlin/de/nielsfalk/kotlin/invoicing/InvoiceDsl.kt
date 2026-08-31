@@ -11,7 +11,9 @@ private typealias TsRow = Row<Int, String, String>
 val timeFormatter = DateTimeFormatter.ofPattern("H:mm")!!
 var localDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")!!
 
-interface InvoiceTemplate
+interface InvoiceTemplate {
+    val filenamePart: String
+}
 
 data class Invoice(
     val yearMonth: YearMonth,
@@ -20,6 +22,8 @@ data class Invoice(
     val invoiceNumber: String,
     val timesheet: List<TimeSheetRow>
 ) {
+    val filename: String get() = "Niels Falk ${invoiceTemplate.filenamePart} Rechnung-Nr $invoiceNumber.pdf"
+
     companion object {
         operator fun invoke(
             year: Int,
