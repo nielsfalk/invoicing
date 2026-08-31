@@ -20,7 +20,7 @@ enum class GermanVatRate(
         to = LocalDate.of(2020, 12, 31)
     ),
 
-    Standard19Sincecrea2021(
+    Standard19Since2021(
         rate = BigDecimal("0.19"),
         from = LocalDate.of(2021, 1, 1),
         to = LocalDate.MAX

@@ -9,13 +9,12 @@ import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale.GERMAN
-import java.util.Locale.GERMANY
 
 private typealias TsRow = Row<Int, String, String>
 
 val timeFormatter = DateTimeFormatter.ofPattern("H:mm")!!
 var localDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", GERMAN)!!
-val longMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", GERMAN)
+val longMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", GERMAN)!!
 fun BigDecimal.toGermanDecimal(): String =
     NumberFormat.getNumberInstance(GERMAN).apply {
         minimumFractionDigits = 2
@@ -99,29 +98,6 @@ fun Duration.formatHoursMinutes(): String {
     val minutes = totalMinutes % 60
     return "%02d:%02d".format(hours, minutes)
 }
-
-fun main() {
-    val prettySheet = invoices.maxBy { it.yearMonth }.run {
-        """
-            ${invoiceTemplate::class.simpleName}
-            $yearMonth
-            
-            day | start | end | duration:
-            ${
-            timesheet.joinToString(
-                separator = "\n            ",
-                transform = TimeSheetRow::prettyString
-            )
-        }
-            
-        """.trimIndent()
-    }
-    println("prettySheet = ${prettySheet}")
-
-}
-
-fun List<TimeSheetRow>.sumAndFormatGermanDecimalHours(): String =
-    sumHours().toGermanDecimal()
 
 fun List<TimeSheetRow>.sumHours(): BigDecimal =
     sumMinutes().toBigDecimal().divide(BigDecimal(60), 2, HALF_UP)

@@ -8,16 +8,16 @@ import java.io.File
 import kotlin.use
 
 fun main(args: Array<String>) {
-    val force = args.contains("force") || args.contains("--force")
+    val force = args.contains("force") || args.contains("--force") || args.contains("-f")
     val outDir = File("out")
-    if (!outDir.exists()) outDir.mkdirs()
+    outDir.mkdirs()
 
-    Asciidoctor.Factory.create().use { ad ->
+    Asciidoctor.Factory.create().use {
         invoices.forEach { invoice ->
             val file = File(outDir, invoice.filename)
             if (!file.exists() || force) {
                 println("Generating ${invoice.filename}...")
-                ad.convert(
+                it.convert(
                     invoice.formatAdoc(),
                     Options.builder()
                         .backend("pdf")

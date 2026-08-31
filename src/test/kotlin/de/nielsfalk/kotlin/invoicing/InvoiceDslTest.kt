@@ -1,7 +1,5 @@
-package de.nielsfalk.kotlin.invoicingimport
+package de.nielsfalk.kotlin.invoicing
 
-import de.nielsfalk.kotlin.invoicing.invoices
-import de.nielsfalk.kotlin.invoicing.localDateFormatter
 import io.kotest.core.spec.style.FreeSpec
 import java.time.YearMonth
 
