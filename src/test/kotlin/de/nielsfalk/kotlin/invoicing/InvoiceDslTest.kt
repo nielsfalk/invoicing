@@ -1,6 +1,7 @@
 package de.nielsfalk.kotlin.invoicingimport
 
 import de.nielsfalk.kotlin.invoicing.invoices
+import de.nielsfalk.kotlin.invoicing.localDateFormatter
 import io.kotest.core.spec.style.FreeSpec
 import java.time.YearMonth
 
@@ -24,6 +25,13 @@ class InvoiceDslTest : FreeSpec({
     }
 
     "format adoc" {
-        assert(invoice.formatAdoc().trimStart().startsWith(":noheader:"))
+        val adoc = invoice.formatAdoc()
+        assert(adoc.trimStart().startsWith(":noheader:"))
+        assert(adoc.contains("<<<"))
+        assert(adoc.contains("== Zeiterfassung"))
+        assert(adoc.contains("| Datum | Beginn | Ende | Dauer"))
+        
+        val firstRow = invoice.timesheet.first()
+        assert(adoc.contains("| ${invoice.yearMonth.atDay(firstRow.day).format(localDateFormatter)} |"))
     }
 })

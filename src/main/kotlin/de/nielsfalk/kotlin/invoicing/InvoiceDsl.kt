@@ -14,7 +14,7 @@ import java.util.Locale.GERMANY
 private typealias TsRow = Row<Int, String, String>
 
 val timeFormatter = DateTimeFormatter.ofPattern("H:mm")!!
-var localDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")!!
+var localDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy", GERMAN)!!
 val longMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", GERMAN)
 fun BigDecimal.toGermanDecimal(): String =
     NumberFormat.getNumberInstance(GERMAN).apply {
