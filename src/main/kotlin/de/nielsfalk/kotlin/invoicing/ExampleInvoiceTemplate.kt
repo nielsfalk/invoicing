@@ -1,7 +1,9 @@
 package de.nielsfalk.kotlin.invoicing
 
 import org.intellij.lang.annotations.Language
+import java.math.BigDecimal
 import java.math.RoundingMode.HALF_UP
+import java.time.YearMonth
 
 object ExampleInvoiceTemplate : InvoiceTemplate {
 
@@ -13,25 +15,36 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
             12345 Berlin
         """.trimIndent()
 
+        val serviceMonth = YearMonth.from(invoiceDate.minusDays(20))
         val hourRate = "120.00".toBigDecimal()
 
-        val formattedHourlyRate = hourRate.toGermanDecimal()
-        val netPrice = (
-                hourRate
-                        * timesheet.sumMinutes().toBigDecimal()
-                        / 60.toBigDecimal()
-                ).setScale(2, HALF_UP)
-        val netTotal = netPrice
-        val formattedNetPrice = netPrice.toGermanDecimal()
-        val formattedNetTotal = netTotal.toGermanDecimal()
-        val vat = invoiceDate.getGermanInvoiceRate()
-        val vatRate = vat.rate
-        val vatTotal = (netPrice * vatRate).setScale(2, HALF_UP)
-        val formattedVatTotal = vatTotal.toGermanDecimal()
+        val vatGroups = timesheet.groupBy {
+            serviceMonth.atDay(it.day.coerceIn(1, serviceMonth.lengthOfMonth()))
+                .getGermanInvoiceRate()
+        }.map { (vat, rows) ->
+            object {
+                val vat = vat
+                val hours = rows.sumHours()
+                val net = (hours * hourRate).setScale(2, HALF_UP)
+                val vatAmount = (net * vat.rate).setScale(2, HALF_UP)
+            }
+        }
+
+        val netTotal = vatGroups.fold(BigDecimal.ZERO) { acc, g -> acc + g.net }
+        val vatTotal = vatGroups.fold(BigDecimal.ZERO) { acc, g -> acc + g.vatAmount }
         val grossTotal = netTotal + vatTotal
+
+        val formattedNetTotal = netTotal.toGermanDecimal()
         val formattedGrossTotal = grossTotal.toGermanDecimal()
         val formattedDueDate = invoiceDate.plusDays(30).format(localDateFormatter)
-        val formattedVatPercentage = vat.percentage.toGermanDecimal()
+
+        val tableRows = vatGroups.mapIndexed { i, g ->
+            "| ${i + 1} | Java-Programmierung und Software-Architektur | ${g.hours.toGermanDecimal()} Stunden | ${hourRate.toGermanDecimal()} € | ${g.net.toGermanDecimal()}"
+        }.joinToString("\n")
+
+        val vatSummary = vatGroups.joinToString("\n") { g ->
+            "| *zzgl. ${g.vat.percentage.toGermanDecimal()}% Mehrwertsteuer* | *${g.vatAmount.toGermanDecimal()} €*"
+        }
 
         @Language("AsciiDoc")
         """
@@ -62,12 +75,12 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
             Rechnung-Nr $invoiceNumber +
             (bei Zahlung bitte angeben)
             
-            [.subtitle]*Dienstleistungen im ${longMonthFormatter.format(yearMonth)}*
+            [.subtitle]*Dienstleistungen im ${longMonthFormatter.format(serviceMonth)}*
             
             [frame=none, grid=none, stripes=none, cols="<3,<12,<3,>5,>4", width="100%", options="header"]
             |===
             | Lfd. Nr. | Bezeichnung | Menge | Stundensatz | Euro
-            | 1 | Java-Programmierung und Software-Architektur | ${timesheet.sumAndFormatGermanDecimalHours()} Stunden | $formattedHourlyRate € | $formattedNetPrice
+            $tableRows
             |   |   |   |   |   
             |===
             
@@ -75,7 +88,7 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
             [frame=none, grid=none, cols="3,>1"]
             |===
             | *Summe Netto* | *$formattedNetTotal €*
-            | *zzgl. $formattedVatPercentage% Mehrwertsteuer* | *$formattedVatTotal €*
+            $vatSummary
             | *Gesamtbetrag* | *$formattedGrossTotal €*
             
             |===

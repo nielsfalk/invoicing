@@ -121,9 +121,9 @@ fun main() {
 }
 
 fun List<TimeSheetRow>.sumAndFormatGermanDecimalHours(): String =
-    "%.2f".format(
-        GERMANY,
-        sumMinutes() / 60.0
-    )
+    sumHours().toGermanDecimal()
+
+fun List<TimeSheetRow>.sumHours(): BigDecimal =
+    sumMinutes().toBigDecimal().divide(BigDecimal(60), 2, HALF_UP)
 
 fun List<TimeSheetRow>.sumMinutes(): Long = sumOf { it.duration.toMinutes() }
