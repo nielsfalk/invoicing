@@ -1,5 +1,100 @@
 package de.nielsfalk.kotlin.invoicing
 
+import org.intellij.lang.annotations.Language
+import java.math.RoundingMode.HALF_UP
+
 object ExampleInvoiceTemplate : InvoiceTemplate {
+
+
+    override fun formatAdoc(invoice: Invoice): String = invoice.run {
+        val address = """
+            Muster Technology GmbH +
+            Musterstraße 12 +
+            12345 Berlin
+        """.trimIndent()
+
+        val hourRate = "120.00".toBigDecimal()
+
+        val formattedHourlyRate = hourRate.toGermanDecimal()
+        val netPrice = (
+                hourRate
+                        * timesheet.sumMinutes().toBigDecimal()
+                        / 60.toBigDecimal()
+                ).setScale(2, HALF_UP)
+        val netTotal = netPrice * 1.toBigDecimal()
+        val formattedNetPrice = netPrice.toGermanDecimal()
+        val formattedNetTotal = netTotal.toGermanDecimal()
+        val vatRate = "0.19".toBigDecimal()
+        val vatTotal = (netPrice * vatRate).setScale(2, HALF_UP)
+        val formattedVatTotal = vatTotal.toGermanDecimal()
+        val grossTotal = netTotal + vatTotal
+        val formattedGrossTotal = grossTotal.toGermanDecimal()
+        val formattedDueDate = invoiceDate.plusDays(30).format(localDateFormatter)
+
+
+        @Language("AsciiDoc")
+        """
+            :noheader:
+            :nofooter:
+            :sectnums!:
+            
+            [frame=none, grid=none, cols="3,>1"]
+            |===
+            a|
+            Niels Falk +
+            Heidefalterweg 10 +
+            12683 Berlin
+            
+            {empty}
+            
+            $address
+            
+            {empty}
+            
+            | ${localDateFormatter.format(invoiceDate)}
+            
+            |===
+            
+            [discrete]
+            == Rechnung
+            
+            Rechnung-Nr $invoiceNumber +
+            (bei Zahlung bitte angeben)
+            
+            [.subtitle]*Dienstleistungen im ${longMonthFormatter.format(invoiceDate.minusDays(20))}*
+            
+            [frame=none, grid=none, stripes=none, cols="<3,<12,<3,>5,>4", width="100%", options="header"]
+            |===
+            | Lfd. Nr. | Bezeichnung | Menge | Stundensatz | Euro
+            | 1 | Java-Programmierung und Software-Architektur | ${timesheet.sumAndFormatGermanDecimalHours()} Stunden | $formattedHourlyRate € | $formattedNetPrice
+            |   |   |   |   |   
+            |===
+            
+            [.small]
+            [frame=none, grid=none, cols="3,>1"]
+            |===
+            | *Summe Netto* | *$formattedNetTotal €*
+            | *zzgl. 19% Mehrwertsteuer* | *$formattedVatTotal €*
+            | *Gesamtbetrag* | *$formattedGrossTotal €*
+            
+            |===
+            
+            {empty}
+            
+            Brutto-Rechnungsbetrag fällig am: $formattedDueDate
+            
+            *Bankverbindung*
+            
+            Kontoinhaber: Niels Falk +
+            Kontonummer: *********** +
+            Bankleitzahl: 43060967 +
+            IBAN: DE4943060967*********** +
+            BIC: GENODEM1GLS +
+            Geldinstitut: GLS Gemeinschaftsbank eG
+            
+            USt.IDNr.: DE***********
+        """.trimIndent()
+    }
+
     override val filenamePart = "example"
 }

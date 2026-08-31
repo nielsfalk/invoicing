@@ -19,7 +19,11 @@ class InvoiceDslTest : FreeSpec({
         assert(invoice.timesheet.size == 21)
     }
 
-    "invoice filename"{
+    "invoice filename" {
         assert(invoice.filename == "Niels Falk example Rechnung-Nr 0001-2025.pdf")
+    }
+
+    "format adoc" {
+        assert(invoice.formatAdoc().trimStart().startsWith(":noheader:"))
     }
 })

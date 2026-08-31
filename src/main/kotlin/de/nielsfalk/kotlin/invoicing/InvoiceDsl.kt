@@ -1,17 +1,31 @@
 package de.nielsfalk.kotlin.invoicing
 
+import java.math.BigDecimal
+import java.math.RoundingMode.HALF_UP
+import java.text.NumberFormat
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.util.Locale.GERMAN
+import java.util.Locale.GERMANY
 
 private typealias TsRow = Row<Int, String, String>
 
 val timeFormatter = DateTimeFormatter.ofPattern("H:mm")!!
 var localDateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy")!!
+val longMonthFormatter = DateTimeFormatter.ofPattern("MMMM yyyy", GERMAN)
+fun BigDecimal.toGermanDecimal(): String =
+    NumberFormat.getNumberInstance(GERMAN).apply {
+        minimumFractionDigits = 2
+        maximumFractionDigits = 2
+        roundingMode = HALF_UP
+    }.format(this)
+
 
 interface InvoiceTemplate {
+    fun formatAdoc(invoice: Invoice): String
     val filenamePart: String
 }
 
@@ -56,6 +70,8 @@ data class Invoice(
                     ${timesheet.joinToString("\n                    ") { it.prettyString() }}
             )""".trimIndent()
     }
+
+    fun formatAdoc(): String = invoiceTemplate.formatAdoc(this)
 }
 
 private fun TsRow.toTimeSheetRow(): TimeSheetRow =
@@ -104,3 +120,10 @@ fun main() {
 
 }
 
+fun List<TimeSheetRow>.sumAndFormatGermanDecimalHours(): String =
+    "%.2f Stunden".format(
+        GERMANY,
+        sumMinutes() / 60.0
+    )
+
+fun List<TimeSheetRow>.sumMinutes(): Long = sumOf { it.duration.toMinutes() }
