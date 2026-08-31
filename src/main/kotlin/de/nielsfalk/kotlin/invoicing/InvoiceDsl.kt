@@ -121,7 +121,7 @@ fun main() {
 }
 
 fun List<TimeSheetRow>.sumAndFormatGermanDecimalHours(): String =
-    "%.2f Stunden".format(
+    "%.2f".format(
         GERMANY,
         sumMinutes() / 60.0
     )

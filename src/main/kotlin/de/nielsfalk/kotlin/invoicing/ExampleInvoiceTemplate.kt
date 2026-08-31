@@ -21,16 +21,17 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
                         * timesheet.sumMinutes().toBigDecimal()
                         / 60.toBigDecimal()
                 ).setScale(2, HALF_UP)
-        val netTotal = netPrice * 1.toBigDecimal()
+        val netTotal = netPrice
         val formattedNetPrice = netPrice.toGermanDecimal()
         val formattedNetTotal = netTotal.toGermanDecimal()
-        val vatRate = "0.19".toBigDecimal()
+        val vat = invoiceDate.getGermanInvoiceRate()
+        val vatRate = vat.rate
         val vatTotal = (netPrice * vatRate).setScale(2, HALF_UP)
         val formattedVatTotal = vatTotal.toGermanDecimal()
         val grossTotal = netTotal + vatTotal
         val formattedGrossTotal = grossTotal.toGermanDecimal()
         val formattedDueDate = invoiceDate.plusDays(30).format(localDateFormatter)
-
+        val formattedVatPercentage = vat.percentage.toGermanDecimal()
 
         @Language("AsciiDoc")
         """
@@ -61,7 +62,7 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
             Rechnung-Nr $invoiceNumber +
             (bei Zahlung bitte angeben)
             
-            [.subtitle]*Dienstleistungen im ${longMonthFormatter.format(invoiceDate.minusDays(20))}*
+            [.subtitle]*Dienstleistungen im ${longMonthFormatter.format(yearMonth)}*
             
             [frame=none, grid=none, stripes=none, cols="<3,<12,<3,>5,>4", width="100%", options="header"]
             |===
@@ -74,7 +75,7 @@ object ExampleInvoiceTemplate : InvoiceTemplate {
             [frame=none, grid=none, cols="3,>1"]
             |===
             | *Summe Netto* | *$formattedNetTotal €*
-            | *zzgl. 19% Mehrwertsteuer* | *$formattedVatTotal €*
+            | *zzgl. $formattedVatPercentage% Mehrwertsteuer* | *$formattedVatTotal €*
             | *Gesamtbetrag* | *$formattedGrossTotal €*
             
             |===
